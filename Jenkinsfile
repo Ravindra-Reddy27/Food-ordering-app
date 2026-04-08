@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-        sstage('Run Tests & Coverage') {
+        stage('Run Tests & Coverage') {
             steps {
                 echo 'Running pytest and generating coverage.xml...'
                 powershell 'docker exec food_app_backend pytest --cov=. --cov-report=xml'
@@ -40,7 +40,7 @@ pipeline {
                 powershell "(Get-Content .\\backend\\coverage.xml) -replace '<source>/app</source>', '<source>/usr/src</source>' -replace 'filename=\"', 'filename=\"backend/' | Set-Content .\\backend\\coverage.xml"
             }
         }
-        
+
         stage('SonarQube Analysis') {
             steps {
                 echo 'Scanning code with SonarQube...'

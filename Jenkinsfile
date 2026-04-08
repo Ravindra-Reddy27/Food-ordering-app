@@ -62,20 +62,24 @@ pipeline {
             steps {
                 echo 'Deploying application to AWS EC2...'
                 
-                // This block uses the SSH Agent plugin to securely connect to AWS
-                sshagent(['ec2-ssh-key']) {
-                    // 1. Disable strict host key checking so Jenkins doesn't freeze asking for a yes/no prompt
-                    // 2. Create an app folder on EC2
-                    // 3. Securely copy (scp) all your project files to the EC2 server
-                    // 4. SSH into the server and run docker-compose up
+                // Bypassing the buggy sshagent plugin and using withCredentials instead
+                withCredentials([sshUserPrivateKey(credentialsId: 'ubuntu', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
                     powershell """
-                    \$sshOpts = "-o StrictHostKeyChecking=no"
+                    # Set up the SSH options to use the temporary key file
+                    \$sshOpts = "-o StrictHostKeyChecking=no -i `"\$env:SSH_KEY`""
+                    \$target = "\$env:SSH_USER@${env.EC2_IP}"
                     
-                    ssh \$sshOpts ubuntu@${env.EC2_IP} "mkdir -p ~/food-booking-app"
+                    echo "Creating directory on EC2..."
+                    ssh \$sshOpts \$target "mkdir -p ~/food-booking-app"
                     
-                    scp -r \$sshOpts ./* ubuntu@${env.EC2_IP}:~/food-booking-app/
+                    echo "Securely copying files to EC2..."
+                    # We use standard scp to move the files
+                    scp -r \$sshOpts ./* "\$target`:~/food-booking-app/"
                     
-                    ssh \$sshOpts ubuntu@${env.EC2_IP} "cd ~/food-booking-app && docker-compose down && docker-compose up -d --build"
+                    echo "Spinning up production containers on EC2..."
+                    # SSH into the server and run docker-compose
+                    # (Added 'sudo' just in case the ubuntu user doesn't have full docker permissions)
+                    ssh \$sshOpts \$target "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
                     """
                 }
             }

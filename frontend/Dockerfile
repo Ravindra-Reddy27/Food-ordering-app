@@ -1,8 +1,6 @@
-# frontend/Dockerfile
 FROM nginx:alpine
-
-# Copy our HTML files to the default Nginx public folder
+# Copy your code
 COPY . /usr/share/nginx/html
-
-# Expose port 80
+# Copy the new config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

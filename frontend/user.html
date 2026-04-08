@@ -25,7 +25,7 @@
         let selectedItems = new Set();
 
         window.onload = async () => {
-            const res = await fetch('http://localhost:8000/items');
+            const res = await fetch('/api/items');
             const items = await res.json();
             const grid = document.getElementById('menuGrid');
             
@@ -93,7 +93,7 @@
                     item_id: parseInt(itemId)
                 };
 
-                const res = await fetch('http://localhost:8000/order', {
+                const res = await fetch('/api/order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)

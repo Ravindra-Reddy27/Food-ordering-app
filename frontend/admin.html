@@ -25,7 +25,7 @@
 
     <script>
         window.onload = async () => {
-            const res = await fetch('http://localhost:8000/admin/orders');
+            const res = await fetch('/api/admin/orders');
             const orders = await res.json();
             const tbody = document.getElementById('ordersTable');
             

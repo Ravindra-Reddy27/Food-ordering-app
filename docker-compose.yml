@@ -31,7 +31,7 @@ services:
     build: ./frontend
     container_name: food_app_frontend
     ports:
-      - "8083:80"  # We map local port 8080 to container port 80
+      - "80:80"  # We map local port 8080 to container port 80
     depends_on:
       - backend
 

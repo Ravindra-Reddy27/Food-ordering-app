@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests & Coverage') {
+        sstage('Run Tests & Coverage') {
             steps {
                 echo 'Running pytest and generating coverage.xml...'
                 powershell 'docker exec food_app_backend pytest --cov=. --cov-report=xml'
@@ -36,10 +36,11 @@ pipeline {
                 powershell 'docker cp food_app_backend:/app/coverage.xml ./backend/coverage.xml'
                 
                 echo 'Fixing file paths for SonarScanner...'
-                powershell "(Get-Content .\\backend\\coverage.xml) -replace '<source>/app</source>', '<source>/usr/src/backend</source>' -replace 'filename=\"', 'filename=\"backend/' | Set-Content .\\backend\\coverage.xml"
+                // THE FIX: Changed '/usr/src/backend' to just '/usr/src' to prevent the double-folder bug
+                powershell "(Get-Content .\\backend\\coverage.xml) -replace '<source>/app</source>', '<source>/usr/src</source>' -replace 'filename=\"', 'filename=\"backend/' | Set-Content .\\backend\\coverage.xml"
             }
         }
-
+        
         stage('SonarQube Analysis') {
             steps {
                 echo 'Scanning code with SonarQube...'

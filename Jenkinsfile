@@ -12,8 +12,16 @@ pipeline {
         stage('Spin Up Test Environment') {
             steps {
                 echo 'Starting Docker containers for testing...'
-                powershell 'docker-compose down' // Ensure any existing containers are stopped
+                // 1. Clean up Jenkins' own workspace
+                powershell 'docker-compose down' 
+                
+                // 2. THE FIX: Forcefully kill any stray ghost containers from manual testing
+                // The '; exit 0' ensures the pipeline keeps going even if the containers don't exist
+                powershell 'docker rm -f food_app_db food_app_backend food_app_frontend; exit 0'
+                
+                // 3. Now it is safe to spin them up
                 powershell 'docker-compose up -d db backend'
+                
                 // Give the database a few seconds to fully boot up
                 sleep time: 15, unit: 'SECONDS' 
             }

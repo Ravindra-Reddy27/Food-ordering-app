@@ -63,17 +63,21 @@ pipeline {
                 echo 'Deploying application to AWS EC2...'
                 
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-                    powershell """
-                    \$target = "\$env:SSH_USER@${env.EC2_IP}"
-                    
-                    echo "Creating directory on EC2..."
-                    ssh -o StrictHostKeyChecking=no -i "\$env:SSH_KEY" \$target "mkdir -p ~/food-booking-app"
-                    
-                    echo "Securely copying files to EC2..."
-                    scp -r -o StrictHostKeyChecking=no -i "\$env:SSH_KEY" ./* "\$target`:~/food-booking-app/"
-                    
-                    echo "Spinning up production containers on EC2..."
-                    ssh -o StrictHostKeyChecking=no -i "\$env:SSH_KEY" \$target "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
+                    bat """
+                        :: 1. Remove all inherited permissions from the key file (Windows OpenSSH requirement)
+                        icacls "%SSH_KEY%" /inheritance:r
+                        
+                        :: 2. Grant Read access ONLY to the user currently running Jenkins
+                        FOR /F "tokens=*" %%i IN ('whoami') DO icacls "%SSH_KEY%" /grant "%%i":R
+                        
+                        :: 3. Create the deployment directory on EC2
+                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %SSH_USER%@${env.EC2_IP} "mkdir -p ~/food-booking-app"
+                        
+                        :: 4. Securely copy all project files to EC2
+                        scp -r -i "%SSH_KEY%" -o StrictHostKeyChecking=no ./* %SSH_USER%@${env.EC2_IP}:~/food-booking-app/
+                        
+                        :: 5. Connect and spin up the production Docker containers
+                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %SSH_USER%@${env.EC2_IP} "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
                     """
                 }
             }

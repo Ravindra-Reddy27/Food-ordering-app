@@ -62,10 +62,8 @@ pipeline {
             steps {
                 echo 'Deploying application to AWS EC2...'
                 
-                // Bypassing the buggy sshagent plugin and using withCredentials instead
-                withCredentials([sshUserPrivateKey(credentialsId: 'ubuntu', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
                     powershell """
-                    # Set up the SSH options to use the temporary key file
                     \$sshOpts = "-o StrictHostKeyChecking=no -i `"\$env:SSH_KEY`""
                     \$target = "\$env:SSH_USER@${env.EC2_IP}"
                     
@@ -73,12 +71,9 @@ pipeline {
                     ssh \$sshOpts \$target "mkdir -p ~/food-booking-app"
                     
                     echo "Securely copying files to EC2..."
-                    # We use standard scp to move the files
                     scp -r \$sshOpts ./* "\$target`:~/food-booking-app/"
                     
                     echo "Spinning up production containers on EC2..."
-                    # SSH into the server and run docker-compose
-                    # (Added 'sudo' just in case the ubuntu user doesn't have full docker permissions)
                     ssh \$sshOpts \$target "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
                     """
                 }

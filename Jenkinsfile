@@ -12,6 +12,7 @@ pipeline {
         stage('Spin Up Test Environment') {
             steps {
                 echo 'Starting Docker containers for testing...'
+                powershell 'docker-compose down' // Ensure any existing containers are stopped
                 powershell 'docker-compose up -d db backend'
                 // Give the database a few seconds to fully boot up
                 sleep time: 15, unit: 'SECONDS' 

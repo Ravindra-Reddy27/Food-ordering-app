@@ -55,7 +55,7 @@ pipeline {
                 echo 'Deploying application to AWS EC2...'
                 
                 // This block uses the SSH Agent plugin to securely connect to AWS
-                sshagent(['ec2-key']) {
+                sshagent(['ec2-ssh-key']) {
                     // 1. Disable strict host key checking so Jenkins doesn't freeze asking for a yes/no prompt
                     // 2. Create an app folder on EC2
                     // 3. Securely copy (scp) all your project files to the EC2 server

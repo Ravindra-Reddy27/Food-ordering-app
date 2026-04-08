@@ -1,0 +1,23 @@
+/Images
+
+# --- Python & Testing ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+backend/coverage.xml
+
+# --- Docker & Database ---
+# We do not want to upload the actual database data files to GitHub!
+postgres_data/
+.docker/
+
+# --- OS & IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Environment Variables ---
+# Never upload secret keys or passwords to GitHub
+.env

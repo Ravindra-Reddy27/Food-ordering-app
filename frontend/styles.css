@@ -1,0 +1,278 @@
+/* =========================================================
+   1. GLOBAL & TYPOGRAPHY
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc; /* Modern, soft off-white */
+    color: #334155; 
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers content for auth pages */
+    padding-top: 40px;
+    box-sizing: border-box;
+}
+
+/* Override body alignment specifically for dashboard pages */
+body.dashboard-body {
+    display: block; /* Removes flex centering so the dashboard can stretch */
+    padding: 40px 5%;
+}
+
+h2 { 
+    color: #0f172a; 
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+a { 
+    color: #10b981; 
+    text-decoration: none; 
+    font-weight: 500;
+}
+a:hover { text-decoration: underline; }
+
+/* =========================================================
+   2. AUTHENTICATION PAGES (Login & Signup)
+   ========================================================= */
+form {
+    background: #ffffff;
+    padding: 40px;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    width: 100%;
+    max-width: 340px; /* Keeps the login box a nice, readable size */
+}
+
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    transition: all 0.2s;
+    background-color: #f8fafc;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #10b981;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+button {
+    width: 100%;
+    background-color: #10b981; /* Modern Emerald */
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+button:hover { 
+    background-color: #059669; 
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.3);
+}
+
+/* =========================================================
+   3. DASHBOARD LAYOUT (Admin & User)
+   ========================================================= */
+.dashboard-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 15px;
+    margin-bottom: 40px;
+}
+
+.dashboard-header h2 {
+    margin-bottom: 0; /* Fixes alignment next to logout button */
+    text-align: left;
+}
+
+.logout-btn {
+    width: auto;
+    background-color: #ef4444; /* Red for logout */
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    padding: 10px 20px;
+}
+.logout-btn:hover { 
+    background-color: #dc2626; 
+    box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.3);
+}
+
+/* =========================================================
+   4. ADMIN DASHBOARD TABLE
+   ========================================================= */
+table {
+    background: #fff;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+th, td {
+    padding: 18px 20px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th { 
+    background-color: #f8fafc; 
+    color: #475569;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background-color: #f1f5f9; }
+
+/* =========================================================
+   5. USER DASHBOARD GRID & CARDS
+   ========================================================= */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.menu-card {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-card:hover {
+    transform: translateY(-6px);
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+.item-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background-color: #e2e8f0;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.item-info {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.item-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.15rem;
+    color: #0f172a;
+    text-align: left; /* Overrides global h3 centering if any */
+}
+
+.item-info .desc {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+    flex-grow: 1; 
+}
+
+.item-info .price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #10b981; 
+    margin: 0;
+}
+
+/* =========================================================
+   6. USER DASHBOARD SELECTION & CART BAR
+   ========================================================= */
+.menu-card.selected {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+    transform: translateY(-6px); 
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2), 0 10px 15px -3px rgba(16, 185, 129, 0.1);
+}
+
+.menu-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: #10b981;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+    z-index: 10;
+}
+
+.cart-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 20px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+}
+
+.cart-bar #cartSummary {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.checkout-btn {
+    width: auto; /* Overrides the 100% width of standard buttons */
+    padding: 14px 32px;
+}

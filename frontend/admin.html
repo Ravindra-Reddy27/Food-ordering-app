@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h2>Admin Order Dashboard</h2>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </header>
+        
+        <table border="1" cellpadding="10" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Items Ordered</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        window.onload = async () => {
+            const res = await fetch('http://localhost:8000/admin/orders');
+            const orders = await res.json();
+            const tbody = document.getElementById('ordersTable');
+            
+            // 1. Group the raw data by username and status
+            const groupedOrders = {};
+
+            orders.forEach(order => {
+                // Create a unique key (e.g., "ravindra_pending")
+                const key = `${order.username}_${order.status}`;
+
+                if (!groupedOrders[key]) {
+                    // If this is the first time seeing this user's order, set up their object
+                    groupedOrders[key] = {
+                        username: order.username,
+                        status: order.status,
+                        itemsList: {} // We will use this to count quantities
+                    };
+                }
+
+                // 2. Count the items for this user
+                if (groupedOrders[key].itemsList[order.item_name]) {
+                    groupedOrders[key].itemsList[order.item_name] += 1; // Increment if it exists
+                } else {
+                    groupedOrders[key].itemsList[order.item_name] = 1;  // Add it if it's new
+                }
+            });
+
+            // 3. Loop through our newly grouped data to build the table
+            Object.values(groupedOrders).forEach(group => {
+                let tr = document.createElement('tr');
+
+                // Convert the itemsList into a clean string (e.g., "2x Margherita Pizza<br>1x Chicken Biryani")
+                let itemsDisplay = Object.entries(group.itemsList)
+                    .map(([itemName, quantity]) => `<strong>${quantity}x</strong> ${itemName}`)
+                    .join('<br><br>'); 
+
+                tr.innerHTML = `
+                    <td style="font-weight: bold; font-size: 16px;">${group.username}</td>
+                    <td>${itemsDisplay}</td>
+                    <td><span style="color: #f39c12; font-weight: bold;">${group.status.toUpperCase()}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

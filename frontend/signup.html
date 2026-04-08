@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h2>Sign Up</h2>
+    <form id="signupForm">
+        <input type="text" id="username" placeholder="Username" required><br><br>
+        <input type="password" id="password" placeholder="Password" required><br><br>
+        <input type="password" id="confirm_password" placeholder="Confirm Password" required><br><br>
+        <button type="submit">Sign Up</button>
+    </form>
+    <p><a href="index.html">Back to Login</a></p>
+
+    <script>
+        document.getElementById('signupForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const pswd = document.getElementById('password').value;
+            const confirmPswd = document.getElementById('confirm_password').value;
+
+            if (pswd !== confirmPswd) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            const payload = {
+                username: document.getElementById('username').value,
+                password: pswd
+            };
+
+            const res = await fetch('http://localhost:8000/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Account created! Please log in.');
+                window.location.href = 'index.html';
+            } else {
+                alert('Error: Username might already exist.');
+            }
+        };
+    </script>
+</body>
+</html>

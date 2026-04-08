@@ -64,17 +64,16 @@ pipeline {
                 
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
                     powershell """
-                    \$sshOpts = "-o StrictHostKeyChecking=no -i `"\$env:SSH_KEY`""
                     \$target = "\$env:SSH_USER@${env.EC2_IP}"
                     
                     echo "Creating directory on EC2..."
-                    ssh \$sshOpts \$target "mkdir -p ~/food-booking-app"
+                    ssh -o StrictHostKeyChecking=no -i "\$env:SSH_KEY" \$target "mkdir -p ~/food-booking-app"
                     
                     echo "Securely copying files to EC2..."
-                    scp -r \$sshOpts ./* "\$target`:~/food-booking-app/"
+                    scp -r -o StrictHostKeyChecking=no -i "\$env:SSH_KEY" ./* "\$target`:~/food-booking-app/"
                     
                     echo "Spinning up production containers on EC2..."
-                    ssh \$sshOpts \$target "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
+                    ssh -o StrictHostKeyChecking=no -i "\$env:SSH_KEY" \$target "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
                     """
                 }
             }

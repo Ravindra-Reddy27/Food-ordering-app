@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # 1. Wait a few seconds to ensure the backend and DB containers are fully awake
 echo "Waiting 10 seconds for containers to initialize..."
 sleep 10

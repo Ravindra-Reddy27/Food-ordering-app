@@ -81,7 +81,7 @@ pipeline {
                         ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %SSH_USER%@${env.EC2_IP} "cd ~/food-booking-app && sudo docker-compose down && sudo docker-compose up -d --build"
 
                         :: 6. THE FIX: Run the automated admin setup script
-                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %SSH_USER%@${env.EC2_IP} "cd ~/food-booking-app && bash seed_admin.sh"
+                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %SSH_USER%@${env.EC2_IP} "cd ~/food-booking-app && sed -i 's/\\r//g' seed_admin.sh && bash seed_admin.sh"
                     """
                 }
             }

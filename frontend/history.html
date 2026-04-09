@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <title>Order History</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -10,8 +10,8 @@
     <div class="dashboard-container">
         <header class="dashboard-header">
             <div>
-                <h2>Today's Active Orders</h2>
-                <a href="history.html" style="font-size: 14px; text-decoration: underline;">View Order History</a>
+                <h2>Completed Order History</h2>
+                <a href="admin.html" style="font-size: 14px; text-decoration: underline;">&larr; Back to Active Orders</a>
             </div>
             <button onclick="logout()" class="logout-btn">Logout</button>
         </header>
@@ -21,7 +21,7 @@
                 <tr>
                     <th>User</th>
                     <th>Items Ordered</th>
-                    <th>Status & Action</th>
+                    <th>Status & Billing</th>
                 </tr>
             </thead>
             <tbody id="ordersTable"></tbody>
@@ -30,25 +30,18 @@
 
     <script>
         window.onload = async () => {
-            fetchOrders();
-        };
-
-        async function fetchOrders() {
-            // 1. Fetch the menu items so we know the prices!
+            // 1. Fetch menu items for pricing
             const itemsRes = await fetch('/api/items');
             const allItems = await itemsRes.json();
-            
-            // Create a quick lookup dictionary for prices
             const priceMap = {};
             allItems.forEach(item => {
                 priceMap[item.item_name] = parseFloat(item.price || 12.99);
             });
 
-            // 2. Fetch the actual orders
-            const res = await fetch('/api/admin/orders?filter=today');
+            // 2. Fetch history orders
+            const res = await fetch('/api/admin/orders?filter=history');
             const orders = await res.json();
             const tbody = document.getElementById('ordersTable');
-            tbody.innerHTML = ''; 
             
             const groupedOrders = {};
 
@@ -69,21 +62,19 @@
                         username: order.username,
                         status: order.status,
                         date: formattedDate,
-                        totalPrice: 0, // NEW: Track the grand total
+                        totalPrice: 0,
                         itemsList: {} 
                     };
                 }
                 
-                // Look up the price for this specific item
                 const itemPrice = priceMap[order.item_name] || 12.99;
-                groupedOrders[key].totalPrice += itemPrice; // Add to grand total
+                groupedOrders[key].totalPrice += itemPrice;
 
                 if (groupedOrders[key].itemsList[order.item_name]) {
                     groupedOrders[key].itemsList[order.item_name].qty += 1;
                 } else {
                     groupedOrders[key].itemsList[order.item_name] = {
-                        qty: 1,
-                        price: itemPrice // Store the individual price for the receipt
+                        qty: 1, price: itemPrice
                     };  
                 }
             });
@@ -97,19 +88,13 @@
                 const safeItems = encodeURIComponent(JSON.stringify(group.itemsList));
 
                 tr.innerHTML = `
-                    <td style="font-weight: bold; font-size: 16px;">
-                        ${group.username}<br>
-                        <span style="color: #64748b; font-size: 12px; font-weight: normal; margin-top: 5px; display: inline-block;">${group.date}</span>
-                    </td>
+                    <td style="font-weight: bold; font-size: 16px;">${group.username}</td>
                     <td>${itemsDisplay}</td>
                     <td>
-                        <span style="color: #f39c12; font-weight: bold;">${group.status.toUpperCase()}</span>
-                        <br><br>
-                        <button onclick="markCompleted('${group.username}')" style="width: auto; padding: 8px 16px; font-size: 12px; border-radius: 6px; margin-bottom: 10px;">
-                            Mark Completed
-                        </button>
-                        <br>
-                        <button onclick="printBill('${group.username}', '${group.date}', '${safeItems}', ${group.totalPrice}, true)" 
+                        <span style="color: #10b981; font-weight: bold;">${group.status.toUpperCase()} &#10004;</span><br>
+                        <span style="color: #64748b; font-size: 13px; margin-top: 5px; margin-bottom: 15px; display: inline-block;">${group.date}</span><br>
+                        
+                        <button onclick="printBill('${group.username}', '${group.date}', '${safeItems}', ${group.totalPrice}, false)" 
                                 style="background-color: #3b82f6; width: auto; padding: 8px 12px; font-size: 12px; border-radius: 6px; box-shadow: none;">
                             <i class="fa-solid fa-file-invoice"></i> Print Bill
                         </button>
@@ -117,16 +102,14 @@
                 `;
                 tbody.appendChild(tr);
             });
-        }
+        };
 
-        // --- UPDATED PRINT FUNCTION (With Math & Prices) ---
+        // --- IDENTICAL PRINT FUNCTION ---
         function printBill(username, date, safeItems, grandTotal, isPending) {
             const itemsList = JSON.parse(decodeURIComponent(safeItems));
-            
             let itemsHTML = '';
             let totalItems = 0;
             
-            // Generate table rows with math!
             for (const [itemName, data] of Object.entries(itemsList)) {
                 const lineTotal = data.qty * data.price;
                 itemsHTML += `
@@ -145,7 +128,6 @@
                 : `<span style="color: #10b981;">Paid & Completed</span>`;
 
             const printWindow = window.open('', '_blank', 'width=600,height=800');
-            
             printWindow.document.write(`
                 <html>
                 <head>
@@ -168,13 +150,11 @@
                     <div class="receipt-box">
                         <h2>Order Receipt</h2>
                         <div class="restaurant-name">Food Booking App</div>
-                        
                         <div class="details">
                             <strong>Customer:</strong> ${username}<br>
                             <strong>Date:</strong> ${date}<br>
                             <strong>Status:</strong> ${statusHtml}
                         </div>
-                        
                         <table>
                             <thead>
                                 <tr>
@@ -184,11 +164,8 @@
                                     <th style="text-align: right;">Total</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                ${itemsHTML}
-                            </tbody>
+                            <tbody>${itemsHTML}</tbody>
                         </table>
-                        
                         <div class="totals-box">
                             <div class="flex-row">
                                 <span>Total Items:</span>
@@ -199,26 +176,14 @@
                                 <span>₹${grandTotal.toFixed(2)}</span>
                             </div>
                         </div>
-                        
                         <div class="thank-you">Thank you for your order!</div>
                     </div>
                 </body>
                 </html>
             `);
-
             printWindow.document.close();
             printWindow.focus();
-            
             setTimeout(() => { printWindow.print(); }, 250);
-        }
-
-        async function markCompleted(username) {
-            const res = await fetch('/api/admin/orders/complete', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username })
-            });
-            if (res.ok) fetchOrders(); 
         }
 
         function logout() {

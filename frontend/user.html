@@ -2,116 +2,160 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Dashboard</title>
+    <title>Food Menu</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="dashboard-body">
-    <div class="dashboard-container" style="padding-bottom: 80px;">
-        <header class="dashboard-header">
+    <div class="dashboard-container">
+        
+        <header class="dashboard-header" id="mainHeader">
             <h2>Select Your Items</h2>
             <button onclick="logout()" class="logout-btn">Logout</button>
         </header>
-        
-        <div id="menuGrid" class="menu-grid"></div>
+
+        <div id="menuSection">
+            <div class="menu-grid" id="menuGrid">
+                </div>
+        </div>
+
+        <div id="successSection" class="success-wrapper" style="display: none;">
+            <div class="success-card">
+                <i class="fa-solid fa-circle-check success-icon-large"></i>
+                <h2>Order Placed!</h2>
+                <p class="success-subtext">The kitchen has received your order.</p>
+
+                <div class="receipt-box">
+                    <h3>Order Summary</h3>
+                    <ul id="receiptItems" class="clean-list">
+                        </ul>
+                    <div class="receipt-total-row">
+                        <span>Total Paid:</span>
+                        <span id="receiptTotal">₹0.00</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="resetMenu()" class="btn-outline">Order More</button>
+                    <button onclick="logout()" class="btn-solid">Logout</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div id="cartBar" class="cart-bar" style="display: none;">
-        <span id="cartSummary">0 items selected</span>
-        <button onclick="submitBulkOrder()" class="checkout-btn">Place Order</button>
+    <div class="cart-bar" id="cartBar">
+        <div id="cartSummary">0 item(s) selected</div>
+        <button onclick="placeOrder()" class="checkout-btn" id="checkoutBtn" disabled>Place Order</button>
     </div>
 
     <script>
+        let allItems = [];
         let selectedItems = new Set();
+        const userId = localStorage.getItem('user_id');
+
+        if (!userId) window.location.href = 'index.html';
 
         window.onload = async () => {
             const res = await fetch('/api/items');
-            const items = await res.json();
-            const grid = document.getElementById('menuGrid');
-            
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'menu-card';
-                card.id = `card-${item.id}`;
-                
-                card.onclick = () => toggleSelection(item.id);
+            allItems = await res.json();
+            renderMenu();
+        };
 
-                // encodeURIComponent fixes the broken image links by properly formatting the spaces in the item names
-                // WITH THIS LINE:
-                const imageUrl = `https://placehold.co/600x400/f1f5f9/64748b?text=${encodeURIComponent(item.item_name)}&font=Inter`;
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+
+            allItems.forEach(item => {
+                const isSelected = selectedItems.has(item.id);
+                
+                const card = document.createElement('div');
+                card.className = `menu-card ${isSelected ? 'selected' : ''}`;
+                card.onclick = () => toggleItem(item.id);
 
                 card.innerHTML = `
-                    <img src="${imageUrl}" alt="${item.item_name}" class="item-img">
+                    <div class="item-img" style="display:flex; align-items:center; justify-content:center; background:#f1f5f9;">
+                        <h3 style="color:#64748b; opacity:0.7;">${item.item_name}</h3>
+                    </div>
                     <div class="item-info">
                         <h3>${item.item_name}</h3>
-                        <p class="desc">${item.description || 'A delicious treat.'}</p>
-                        <p class="price">₹${item.price}</p>
+                        <p class="desc">Delicious freshly prepared ${item.item_name.toLowerCase()}.</p>
+                        <p class="price">₹${item.price || '12.99'}</p> 
                     </div>
                 `;
                 grid.appendChild(card);
             });
-        };
+            updateCartBar();
+        }
 
-        function toggleSelection(itemId) {
-            const card = document.getElementById(`card-${itemId}`);
-            
+        function toggleItem(itemId) {
             if (selectedItems.has(itemId)) {
                 selectedItems.delete(itemId);
-                card.classList.remove('selected');
             } else {
                 selectedItems.add(itemId);
-                card.classList.add('selected');
             }
-            updateCartUI();
+            renderMenu();
         }
 
-        function updateCartUI() {
-            const cartBar = document.getElementById('cartBar');
-            const summary = document.getElementById('cartSummary');
+        function updateCartBar() {
+            const count = selectedItems.size;
+            document.getElementById('cartSummary').innerText = `${count} item(s) selected`;
             
-            if (selectedItems.size > 0) {
-                cartBar.style.display = 'flex';
-                summary.innerText = `${selectedItems.size} item(s) selected`;
+            const btn = document.getElementById('checkoutBtn');
+            if (count > 0) {
+                btn.removeAttribute('disabled');
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
             } else {
-                cartBar.style.display = 'none';
+                btn.setAttribute('disabled', 'true');
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
             }
         }
 
-        async function submitBulkOrder() {
-            const userId = localStorage.getItem('user_id');
-            if (!userId) {
-                alert("Session expired. Please log in again.");
-                window.location.href = 'index.html';
-                return;
-            }
+        async function placeOrder() {
+            if (selectedItems.size === 0) return;
 
-            let successCount = 0;
-
+            let orderHtml = '';
+            let total = 0;
+            
             for (let itemId of selectedItems) {
-                const payload = {
-                    user_id: parseInt(userId),
-                    item_id: parseInt(itemId)
-                };
+                const itemData = allItems.find(i => i.id === itemId);
+                const price = parseFloat(itemData.price || 12.99); 
+                total += price;
+                
+                orderHtml += `
+                    <li>
+                        <span>1x ${itemData.item_name}</span>
+                        <span>₹${price.toFixed(2)}</span>
+                    </li>
+                `;
 
-                const res = await fetch('/api/order', {
+                await fetch('/api/order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ user_id: parseInt(userId), item_id: itemId })
                 });
-
-                if (res.ok) successCount++;
             }
 
-            if (successCount === selectedItems.size) {
-                alert(`Success! ${successCount} items have been ordered.`);
-                selectedItems.clear();
-                document.querySelectorAll('.menu-card.selected').forEach(card => {
-                    card.classList.remove('selected');
-                });
-                updateCartUI();
-            } else {
-                alert("Some items failed to process. Check admin dashboard.");
-            }
+            document.getElementById('receiptItems').innerHTML = orderHtml;
+            document.getElementById('receiptTotal').innerText = `₹${total.toFixed(2)}`;
+
+            document.getElementById('menuSection').style.display = 'none';
+            document.getElementById('cartBar').style.display = 'none';
+            document.getElementById('mainHeader').style.display = 'none'; 
+            
+            document.getElementById('successSection').style.display = 'flex'; 
+            
+            selectedItems.clear();
+            renderMenu();
+        }
+
+        function resetMenu() {
+            document.getElementById('successSection').style.display = 'none';
+            document.getElementById('menuSection').style.display = 'block';
+            document.getElementById('cartBar').style.display = 'flex';
+            document.getElementById('mainHeader').style.display = 'flex'; 
         }
 
         function logout() {

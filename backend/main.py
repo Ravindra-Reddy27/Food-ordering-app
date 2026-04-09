@@ -44,6 +44,10 @@ class OrderRequest(BaseModel):
     user_id: int
     item_id: int
 
+# 1. New Model for completing orders
+class CompleteOrderReq(BaseModel):
+    username: str
+    
 # --- API Endpoints ---
 
 @app.post("/signup")
@@ -119,20 +123,60 @@ def place_order(order: OrderRequest):
     conn.close()
     return {"message": "Order placed successfully"}
 
+    
+# 2. Updated GET route with filters for "today" vs "history"
 @app.get("/admin/orders")
-def get_all_orders():
+def get_all_orders(filter: str = 'today'):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    # Join tables to get actual names instead of just IDs
-    query = """
-        SELECT orders.id, users.username, items.item_name, orders.order_date, orders.status 
-        FROM orders
-        JOIN users ON orders.user_id = users.id
-        JOIN items ON orders.item_id = items.id
-        ORDER BY orders.order_date DESC
-    """
+    
+    if filter == 'history':
+        # Show ONLY completed orders (History)
+        query = """
+            SELECT orders.id, users.username, items.item_name, orders.order_date, orders.status 
+            FROM orders
+            JOIN users ON orders.user_id = users.id
+            JOIN items ON orders.item_id = items.id
+            WHERE orders.status = 'completed'
+            ORDER BY orders.order_date DESC
+        """
+    else:
+        # Show ONLY pending orders from TODAY
+        query = """
+            SELECT orders.id, users.username, items.item_name, orders.order_date, orders.status 
+            FROM orders
+            JOIN users ON orders.user_id = users.id
+            JOIN items ON orders.item_id = items.id
+            WHERE orders.status = 'pending' AND DATE(orders.order_date) = CURRENT_DATE
+            ORDER BY orders.order_date DESC
+        """
+        
     cursor.execute(query)
     orders = cursor.fetchall()
     cursor.close()
     conn.close()
     return orders
+
+# 3. New PUT route to update order status
+@app.put("/admin/orders/complete")
+def complete_orders(req: CompleteOrderReq):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Update all pending orders for this specific user to 'completed'
+    query = """
+        UPDATE orders 
+        SET status = 'completed' 
+        WHERE status = 'pending' 
+        AND user_id = (SELECT id FROM users WHERE username = %s)
+    """
+    try:
+        cursor.execute(query, (req.username,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update orders")
+    finally:
+        cursor.close()
+        conn.close()
+        
+    return {"message": "Orders marked as completed"}

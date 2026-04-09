@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Login</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <h2>Login</h2>
     <form id="loginForm">
         <input type="text" id="username" placeholder="Username" required><br><br>
-        <input type="password" id="password" placeholder="Password" required><br><br>
+        
+        <div class="password-container">
+            <input type="password" id="passwordInput" placeholder="Password" required>
+            <i id="togglePassword" class="fa-regular fa-eye eye-icon"></i>
+        </div>
+        <br><br>
         
         <select id="roleSelect" required>
             <option value="user">Login as User</option>
@@ -20,17 +27,30 @@
     <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
 
     <script>
+        // --- Password Toggle Logic ---
+        const togglePassword = document.querySelector('#togglePassword');
+        const passwordInput = document.querySelector('#passwordInput');
+
+        togglePassword.addEventListener('click', function () {
+            // Toggle the type attribute (password vs text)
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // 3. TOGGLE THE ICON BETWEEN OPEN AND CLOSED EYE
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // --- Login Form Submission Logic ---
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             
-            // Get the values from the inputs
             const payload = {
                 username: document.getElementById('username').value,
-                password: document.getElementById('password').value
+                password: document.getElementById('passwordInput').value 
             };
             const selectedRole = document.getElementById('roleSelect').value;
 
-            // Call our FastAPI backend
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -40,13 +60,11 @@
             if (res.ok) {
                 const data = await res.json();
                 
-                // NEW LOGIC: Verify the selected role matches the database role
                 if (data.role !== selectedRole) {
                     alert(`Access Denied: You selected ${selectedRole.toUpperCase()}, but this account is registered as a ${data.role.toUpperCase()}.`);
-                    return; // Stop the login process
+                    return; 
                 }
 
-                // If roles match, save the user_id and redirect
                 localStorage.setItem('user_id', data.user_id); 
                 
                 if (data.role === 'admin') {

@@ -1,20 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Sign Up</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <h2>Sign Up</h2>
     <form id="signupForm">
         <input type="text" id="username" placeholder="Username" required><br><br>
-        <input type="password" id="password" placeholder="Password" required><br><br>
-        <input type="password" id="confirm_password" placeholder="Confirm Password" required><br><br>
+        
+        <div class="password-container">
+            <input type="password" id="password" placeholder="Password" required>
+            <i id="togglePassword1" class="fa-regular fa-eye eye-icon"></i>
+        </div><br><br>
+        
+        <div class="password-container">
+            <input type="password" id="confirm_password" placeholder="Confirm Password" required>
+            <i id="togglePassword2" class="fa-regular fa-eye eye-icon"></i>
+        </div><br><br>
+        
         <button type="submit">Sign Up</button>
     </form>
     <p><a href="index.html">Back to Login</a></p>
 
     <script>
+        // --- 1. Password Toggle Logic ---
+        function setupPasswordToggle(toggleId, inputId) {
+            const toggleBtn = document.getElementById(toggleId);
+            const inputField = document.getElementById(inputId);
+
+            toggleBtn.addEventListener('click', function () {
+                // Toggle the type attribute (password vs text)
+                const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
+                inputField.setAttribute('type', type);
+                
+                // 3. TOGGLE THE ICON BETWEEN OPEN AND CLOSED EYE
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Activate the toggle for both password fields
+        setupPasswordToggle('togglePassword1', 'password');
+        setupPasswordToggle('togglePassword2', 'confirm_password');
+
+
+        // --- 2. Sign Up Form Submission Logic ---
         document.getElementById('signupForm').onsubmit = async (e) => {
             e.preventDefault();
             const pswd = document.getElementById('password').value;

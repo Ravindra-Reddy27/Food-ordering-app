@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- Insert a default Admin user (password should be hashed in production, using plain text for initial testing setup)
 -- We will use 'admin123' as a placeholder password hash for now.
-INSERT INTO users (username, password_hash, role) VALUES ('Ravi', 'admin123', 'admin');
+-- INSERT INTO users (username, password_hash, role) VALUES ('Ravi', 'admin123', 'admin');
 
 -- Insert some default food items
 INSERT INTO items (item_name, description, price) VALUES 
